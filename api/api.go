@@ -16,7 +16,7 @@ func NewServer(addr string) *LoyaltyServer {
 	server := LoyaltyServer{
 		Server: http.Server{
 			Addr:    addr,
-			Handler: nil,
+			Handler: newRouter(),
 		},
 	}
 
