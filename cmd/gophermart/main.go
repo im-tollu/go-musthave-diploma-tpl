@@ -19,7 +19,10 @@ func main() {
 
 	log.Printf("Starting with config %#v", conf)
 
-	server := api.NewServer(conf.RunAddress)
+	server, errServer := api.NewServer(conf.RunAddress)
+	if errServer != nil {
+		log.Fatalf("Cannot start HTTP server: %s", errServer.Error())
+	}
 
 	awaitTermination()
 

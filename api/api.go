@@ -2,6 +2,9 @@ package api
 
 import (
 	"context"
+	"fmt"
+	"github.com/im-tollu/go-musthave-diploma-tpl/api/handler"
+	auth "github.com/im-tollu/go-musthave-diploma-tpl/service/auth/v1"
 	"log"
 	"net/http"
 )
@@ -12,11 +15,22 @@ type LoyaltyServer struct {
 
 // NewServer makes an instance of LoyaltyServer HTTP server and runs it
 // in a separate goroutine
-func NewServer(addr string) *LoyaltyServer {
+func NewServer(addr string) (*LoyaltyServer, error) {
+	authSrv, errAuth := auth.NewService()
+	if errAuth != nil {
+		return nil, fmt.Errorf("cannot get instance of Auth Service: %w", errAuth)
+	}
+
+	h, errHandler := handler.NewHandler(authSrv)
+	if errHandler != nil {
+		return nil, fmt.Errorf("cannot get instance of Handler: %w", errHandler)
+	}
+
+	r := newRouter(h)
 	server := LoyaltyServer{
 		Server: http.Server{
 			Addr:    addr,
-			Handler: newRouter(),
+			Handler: r,
 		},
 	}
 
@@ -29,7 +43,7 @@ func NewServer(addr string) *LoyaltyServer {
 		}
 	}()
 
-	return &server
+	return &server, nil
 }
 
 // Shutdown gracefully stops the server
