@@ -21,13 +21,19 @@ func (h *LoyaltyHandler) Login(w http.ResponseWriter, r *http.Request) {
 
 	dec := json.NewDecoder(r.Body)
 	if errDec := dec.Decode(&cred); errDec != nil {
-		msg := fmt.Sprintf("Cannot parse credentials: %s", errDec.Error())
+		msg := fmt.Sprintf("Cannot parse login credentials: %s", errDec.Error())
 		http.Error(w, msg, http.StatusBadRequest)
 		return
 	}
 
 	u, errLogin := h.authSrv.Login(cred.ToCredentials())
+	if errors.Is(errLogin, auth.ErrUserNotFound) {
+		log.Printf("User not found by login: [%s]", cred.Login)
+		http.Error(w, "Incorrect login/password", http.StatusUnauthorized)
+		return
+	}
 	if errors.Is(errLogin, auth.ErrWrongCredentials) {
+		log.Printf("User found, but password does not match: [%s]", cred.Login)
 		http.Error(w, "Incorrect login/password", http.StatusUnauthorized)
 		return
 	}

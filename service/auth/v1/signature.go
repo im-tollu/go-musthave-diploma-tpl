@@ -6,7 +6,6 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"github.com/im-tollu/go-musthave-diploma-tpl/service/auth"
-	authStorage "github.com/im-tollu/go-musthave-diploma-tpl/storage/auth"
 	"strconv"
 )
 
@@ -21,7 +20,7 @@ func generateKey() ([]byte, error) {
 	return key, nil
 }
 
-func signUserId(key authStorage.UserSession) auth.SignedUserID {
+func signUserId(key auth.UserSession) auth.SignedUserID {
 	h := hmac.New(sha256.New, key.SignatureKey)
 	h.Write([]byte(strconv.FormatInt(key.UserID, 10)))
 	sum := h.Sum(nil)

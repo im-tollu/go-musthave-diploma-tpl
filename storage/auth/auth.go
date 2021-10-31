@@ -1,7 +1,9 @@
 package auth
 
+import srv "github.com/im-tollu/go-musthave-diploma-tpl/service/auth"
+
 type Storage interface {
-	CreateUser(u UserToCreate) (User, error)
-	SetUserSession(u UserSession) error
-	GetUserByLogin(login string) (*User, error)
+	CreateUser(u srv.UserToCreate) (srv.User, error)
+	GetUserByLogin(login string) (*srv.User, error)
+	SetUserSession(u srv.UserSessionToStart) (srv.UserSession, error)
 }

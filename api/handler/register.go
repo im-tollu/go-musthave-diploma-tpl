@@ -21,8 +21,13 @@ func (h *LoyaltyHandler) Register(w http.ResponseWriter, r *http.Request) {
 
 	dec := json.NewDecoder(r.Body)
 	if errDec := dec.Decode(&cred); errDec != nil {
-		msg := fmt.Sprintf("Cannot parse credentials: %s", errDec.Error())
+		msg := fmt.Sprintf("Cannot parse registration credentials: %s", errDec.Error())
 		http.Error(w, msg, http.StatusBadRequest)
+		return
+	}
+
+	if cred.Login == "" || cred.Password == "" {
+		http.Error(w, "Empty login/password not allowed", http.StatusBadRequest)
 		return
 	}
 
@@ -37,5 +42,5 @@ func (h *LoyaltyHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.Login(w, r)
+	http.Redirect(w, r, "/api/user/login", http.StatusTemporaryRedirect)
 }

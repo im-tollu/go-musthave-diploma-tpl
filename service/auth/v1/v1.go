@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"errors"
 	"fmt"
 	"github.com/im-tollu/go-musthave-diploma-tpl/service/auth"
 	authStorage "github.com/im-tollu/go-musthave-diploma-tpl/storage/auth"
@@ -13,10 +14,12 @@ type Service struct {
 	storage authStorage.Storage
 }
 
-func NewService() (*Service, error) {
-	srv := Service{}
+func NewService(storage authStorage.Storage) (*Service, error) {
+	if storage == nil {
+		return nil, errors.New("storage required")
+	}
 
-	return &srv, nil
+	return &Service{storage}, nil
 }
 
 func (s *Service) Register(cred auth.Credentials) error {
@@ -25,7 +28,7 @@ func (s *Service) Register(cred auth.Credentials) error {
 		return fmt.Errorf("cannot hash password: %w", errHash)
 	}
 
-	u := authStorage.UserToCreate{
+	u := auth.UserToCreate{
 		Login:        cred.Login,
 		PasswordHash: hash,
 	}
@@ -44,9 +47,6 @@ func (s *Service) Login(cred auth.Credentials) (auth.SignedUserID, error) {
 	if errGet != nil {
 		return nilLogin, fmt.Errorf("cannot get user by sess [%s]: %w", cred.Login, errGet)
 	}
-	if u == nil {
-		return nilLogin, fmt.Errorf("user not found by sess [%s]: %w", cred.Login, auth.ErrWrongCredentials)
-	}
 
 	if errValidate := bcrypt.CompareHashAndPassword(u.PasswordHash, cred.Password); errValidate != nil {
 		return nilLogin, fmt.Errorf("password doesn't match for user [%s]: %w", cred.Login, auth.ErrWrongCredentials)
@@ -57,13 +57,14 @@ func (s *Service) Login(cred auth.Credentials) (auth.SignedUserID, error) {
 		return nilLogin, fmt.Errorf("cannot generate signature key: %w", errGenKey)
 	}
 
-	sess := authStorage.UserSession{
+	sessToStart := auth.UserSessionToStart{
 		UserID:       u.ID,
 		SignatureKey: sigKey,
 	}
 
-	if errSetKey := s.storage.SetUserSession(sess); errSetKey != nil {
-		return nilLogin, fmt.Errorf("cannot create session for user [%d]: %w", u.ID, errSetKey)
+	sess, errSet := s.storage.SetUserSession(sessToStart)
+	if errSet != nil {
+		return nilLogin, fmt.Errorf("cannot create session for user [%d]: %w", u.ID, errSet)
 	}
 
 	signedUserID := signUserId(sess)
