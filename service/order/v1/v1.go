@@ -19,7 +19,7 @@ func NewService(storage orderStorage.Storage) (*Service, error) {
 	return &Service{storage}, nil
 }
 
-func (s *Service) ScheduleOrder(pr order.ProcessRequest) error {
+func (s *Service) UploadOrder(pr order.ProcessRequest) error {
 	if errAdd := s.storage.AddOrder(pr); errAdd != nil {
 		if errors.Is(errAdd, order.ErrDuplicateOrder) {
 			dupO, errGet := s.storage.GetOrderByNr(pr.Nr)
@@ -38,4 +38,13 @@ func (s *Service) ScheduleOrder(pr order.ProcessRequest) error {
 	}
 
 	return nil
+}
+
+func (s *Service) ListUserOrders(userID int64) ([]order.Order, error) {
+	orders, err := s.storage.ListUserOrders(userID)
+	if err != nil {
+		return orders, fmt.Errorf("cannot list orders for user [%d]: %w", userID, err)
+	}
+
+	return orders, nil
 }

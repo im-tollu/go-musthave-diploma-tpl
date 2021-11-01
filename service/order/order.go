@@ -1,5 +1,6 @@
 package order
 
 type Service interface {
-	ScheduleOrder(pr ProcessRequest) error
+	UploadOrder(pr ProcessRequest) error
+	ListUserOrders(userID int64) ([]Order, error)
 }

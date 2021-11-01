@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"time"
 )
 
 var ErrDuplicateOrder = errors.New("duplicate order")
@@ -13,6 +14,13 @@ var ErrDuplicateOrderForUser = errors.New("order already posted by the user")
 var ErrDuplicateOrderForAnotherUser = errors.New("order already posted by another user")
 
 var ErrInvalidOrderNr = errors.New("invalid order number")
+
+var ErrOrderNotFound = errors.New("order not found")
+
+const StatusNew = "NEW"
+const StatusProcessing = "PROCESSING"
+const StatusInvalid = "INVALID"
+const StatusProcessed = "PROCESSED"
 
 func ParseOrderNr(s string) (int64, error) {
 	nr, errConv := strconv.ParseInt(s, 10, 64)
@@ -50,4 +58,12 @@ func ParseOrderNr(s string) (int64, error) {
 type ProcessRequest struct {
 	Nr     int64
 	UserID int64
+}
+
+type Order struct {
+	UserID     int64
+	Nr         int64
+	Status     string
+	Accrual    int
+	UploadedAt time.Time
 }
