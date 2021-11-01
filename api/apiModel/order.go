@@ -20,3 +20,17 @@ func NewOrderView(o order.Order) OrderView {
 		UploadedAt: time.Time{},
 	}
 }
+
+type BalanceView struct {
+	Current   float64 `json:"current"`
+	Withdrawn float64 `json:"withdrawn"`
+}
+
+func NewBalanceView(b order.Balance) BalanceView {
+	current, _ := b.Current.Float64()
+	withdrawn, _ := b.Withdrawn.Float64()
+	return BalanceView{
+		Current:   current,
+		Withdrawn: withdrawn,
+	}
+}

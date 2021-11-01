@@ -3,6 +3,7 @@ package order
 import (
 	"errors"
 	"fmt"
+	"math/big"
 	"strconv"
 	"time"
 )
@@ -64,6 +65,11 @@ type Order struct {
 	UserID     int64
 	Nr         int64
 	Status     string
-	Accrual    int
+	Accrual    *big.Rat
 	UploadedAt time.Time
+}
+
+type Balance struct {
+	Current   *big.Rat
+	Withdrawn *big.Rat
 }

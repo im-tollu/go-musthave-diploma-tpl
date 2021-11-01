@@ -22,6 +22,7 @@ func newRouter(h *handler.LoyaltyHandler) *loyaltyRouter {
 			g.Use(middleware.Authenticator(h.AuthSrv))
 			g.Post("/orders", h.PostOrder)
 			g.Get("/orders", h.GetOrders)
+			g.Get("/balance", h.Balance)
 		})
 	})
 

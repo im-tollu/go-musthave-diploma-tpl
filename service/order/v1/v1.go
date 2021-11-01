@@ -3,15 +3,16 @@ package v1
 import (
 	"errors"
 	"fmt"
-	"github.com/im-tollu/go-musthave-diploma-tpl/service/order"
-	orderStorage "github.com/im-tollu/go-musthave-diploma-tpl/storage/order"
+	srv "github.com/im-tollu/go-musthave-diploma-tpl/service/order"
+	storage "github.com/im-tollu/go-musthave-diploma-tpl/storage/order"
+	"math/big"
 )
 
 type Service struct {
-	storage orderStorage.Storage
+	storage storage.Storage
 }
 
-func NewService(storage orderStorage.Storage) (*Service, error) {
+func NewService(storage storage.Storage) (*Service, error) {
 	if storage == nil {
 		return nil, errors.New("storage required")
 	}
@@ -19,18 +20,18 @@ func NewService(storage orderStorage.Storage) (*Service, error) {
 	return &Service{storage}, nil
 }
 
-func (s *Service) UploadOrder(pr order.ProcessRequest) error {
+func (s *Service) UploadOrder(pr srv.ProcessRequest) error {
 	if errAdd := s.storage.AddOrder(pr); errAdd != nil {
-		if errors.Is(errAdd, order.ErrDuplicateOrder) {
+		if errors.Is(errAdd, srv.ErrDuplicateOrder) {
 			dupO, errGet := s.storage.GetOrderByNr(pr.Nr)
 			if errGet != nil {
 				return fmt.Errorf("cannot get details of a duplicate order: %w", errGet)
 			}
 
 			if dupO.UserID == pr.UserID {
-				return order.ErrDuplicateOrderForUser
+				return srv.ErrDuplicateOrderForUser
 			} else {
-				return order.ErrDuplicateOrderForAnotherUser
+				return srv.ErrDuplicateOrderForAnotherUser
 			}
 		}
 
@@ -40,11 +41,31 @@ func (s *Service) UploadOrder(pr order.ProcessRequest) error {
 	return nil
 }
 
-func (s *Service) ListUserOrders(userID int64) ([]order.Order, error) {
+func (s *Service) ListUserOrders(userID int64) ([]srv.Order, error) {
 	orders, err := s.storage.ListUserOrders(userID)
 	if err != nil {
 		return orders, fmt.Errorf("cannot list orders for user [%d]: %w", userID, err)
 	}
 
 	return orders, nil
+}
+
+func (s *Service) GetUserBalance(userID int64) (srv.Balance, error) {
+	balance := srv.Balance{
+		Current:   big.NewRat(0, 2),
+		Withdrawn: big.NewRat(0, 2),
+	}
+
+	orders, err := s.storage.ListUserOrders(userID)
+	if err != nil {
+		return balance, fmt.Errorf("cannot list orders for user [%d]: %w", userID, err)
+	}
+
+	for _, order := range orders {
+		if order.Status == srv.StatusProcessed {
+			balance.Current.Add(balance.Current, order.Accrual)
+		}
+	}
+
+	return balance, nil
 }
