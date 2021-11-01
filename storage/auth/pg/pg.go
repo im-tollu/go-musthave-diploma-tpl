@@ -76,3 +76,18 @@ func (s *AuthStorage) SetUserSession(us srv.UserSessionToStart) (srv.UserSession
 
 	return sess, nil
 }
+
+func (s *AuthStorage) GetUserSession(uID int64) (srv.UserSession, error) {
+	row := s.QueryRow(`
+		select USERS_ID, USER_SESSIONS_SIG_KEY, USER_SESSIONS_STARTED_AT
+		from USER_SESSIONS 
+		where USERS_ID = $1  
+		`, uID)
+	sess := srv.UserSession{}
+
+	if err := row.Scan(&sess.UserID, &sess.SignatureKey, &sess.StartedAt); err != nil {
+		return sess, fmt.Errorf("cannot get user session: %w", err)
+	}
+
+	return sess, nil
+}

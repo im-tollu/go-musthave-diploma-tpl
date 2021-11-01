@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"crypto/hmac"
 	"errors"
 	"fmt"
 	"github.com/im-tollu/go-musthave-diploma-tpl/service/auth"
@@ -70,4 +71,18 @@ func (s *Service) Login(cred auth.Credentials) (auth.SignedUserID, error) {
 	signedUserID := signUserId(sess)
 
 	return signedUserID, nil
+}
+
+func (s *Service) Validate(sgn auth.SignedUserID) error {
+	sess, errGet := s.storage.GetUserSession(sgn.ID)
+	if errGet != nil {
+		return fmt.Errorf("cannot get user session: %w", errGet)
+	}
+
+	canonicalS := signUserId(sess)
+	if !hmac.Equal(canonicalS.Signature, sgn.Signature) {
+		return errors.New(fmt.Sprintf("signature %v doesn't match", sgn))
+	}
+
+	return nil
 }

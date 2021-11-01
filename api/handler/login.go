@@ -26,7 +26,7 @@ func (h *LoyaltyHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	u, errLogin := h.authSrv.Login(cred.ToCredentials())
+	u, errLogin := h.AuthSrv.Login(cred.ToCredentials())
 	if errors.Is(errLogin, auth.ErrUserNotFound) {
 		log.Printf("User not found by login: [%s]", cred.Login)
 		http.Error(w, "Incorrect login/password", http.StatusUnauthorized)

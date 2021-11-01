@@ -9,7 +9,8 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/im-tollu/go-musthave-diploma-tpl/api"
 	"github.com/im-tollu/go-musthave-diploma-tpl/config"
-	"github.com/im-tollu/go-musthave-diploma-tpl/storage/auth/pg"
+	auth "github.com/im-tollu/go-musthave-diploma-tpl/storage/auth/pg"
+	order "github.com/im-tollu/go-musthave-diploma-tpl/storage/order/pg"
 	_ "github.com/jackc/pgx/v4/stdlib"
 	"log"
 	"os"
@@ -35,12 +36,17 @@ func main() {
 		log.Fatalf("Cannot start DB: %s", errDB.Error())
 	}
 
-	authStorage, errAuthStorage := pg.NewAuthStorage(db)
+	authStorage, errAuthStorage := auth.NewAuthStorage(db)
 	if errAuthStorage != nil {
 		log.Fatalf("Cannot instantiate auth storage: %s", errAuthStorage.Error())
 	}
 
-	server, errServer := api.NewServer(conf.RunAddress, authStorage)
+	orderStorage, errOrderStorage := order.NewOrderStorage(db)
+	if errOrderStorage != nil {
+		log.Fatalf("Cannot instantiate order storage: %s", errOrderStorage.Error())
+	}
+
+	server, errServer := api.NewServer(conf.RunAddress, authStorage, orderStorage)
 	if errServer != nil {
 		log.Fatalf("Cannot start HTTP server: %s", errServer.Error())
 	}

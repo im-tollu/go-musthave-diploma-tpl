@@ -31,7 +31,7 @@ func (h *LoyaltyHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	errReg := h.authSrv.Register(cred.ToCredentials())
+	errReg := h.AuthSrv.Register(cred.ToCredentials())
 	if errors.Is(errReg, auth.ErrLoginAlreadyTaken) {
 		http.Error(w, "Login already taken", http.StatusConflict)
 		return

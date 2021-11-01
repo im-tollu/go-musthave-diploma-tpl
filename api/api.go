@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"github.com/im-tollu/go-musthave-diploma-tpl/api/handler"
 	auth "github.com/im-tollu/go-musthave-diploma-tpl/service/auth/v1"
+	order "github.com/im-tollu/go-musthave-diploma-tpl/service/order/v1"
 	authStorage "github.com/im-tollu/go-musthave-diploma-tpl/storage/auth"
+	orderStorage "github.com/im-tollu/go-musthave-diploma-tpl/storage/order"
 	"log"
 	"net/http"
 )
@@ -16,13 +18,18 @@ type LoyaltyServer struct {
 
 // NewServer makes an instance of LoyaltyServer HTTP server and runs it
 // in a separate goroutine
-func NewServer(addr string, authStorage authStorage.Storage) (*LoyaltyServer, error) {
+func NewServer(addr string, authStorage authStorage.Storage, orderStorage orderStorage.Storage) (*LoyaltyServer, error) {
 	authSrv, errAuth := auth.NewService(authStorage)
 	if errAuth != nil {
 		return nil, fmt.Errorf("cannot get instance of Auth Service: %w", errAuth)
 	}
 
-	h, errHandler := handler.NewHandler(authSrv)
+	orderSrv, errOrder := order.NewService(orderStorage)
+	if errOrder != nil {
+		return nil, fmt.Errorf("cannot get instance of Order Service: %w", errOrder)
+	}
+
+	h, errHandler := handler.NewHandler(authSrv, orderSrv)
 	if errHandler != nil {
 		return nil, fmt.Errorf("cannot get instance of Handler: %w", errHandler)
 	}
