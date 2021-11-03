@@ -1,7 +1,9 @@
 package apiModel
 
 import (
+	"fmt"
 	"github.com/im-tollu/go-musthave-diploma-tpl/service/order"
+	"math/big"
 	"time"
 )
 
@@ -33,4 +35,24 @@ func NewBalanceView(b order.Balance) BalanceView {
 		Current:   current,
 		Withdrawn: withdrawn,
 	}
+}
+
+type WithdrawalRequestJson struct {
+	OrderNr string `json:"order"`
+	Sum     int64  `json:"sum"`
+}
+
+func NewWithdrawalRequest(j WithdrawalRequestJson, userID int64) (order.WithdrawalRequest, error) {
+	wr := order.WithdrawalRequest{}
+
+	orderNr, err := order.ParseOrderNr(j.OrderNr)
+	if err != nil {
+		return wr, fmt.Errorf("cannot make withdrawal request: %s", err)
+	}
+
+	wr.OrderNr = orderNr
+	wr.Sum = big.NewRat(j.Sum*100, 100)
+	wr.UserID = userID
+
+	return wr, nil
 }

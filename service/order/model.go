@@ -18,6 +18,8 @@ var ErrInvalidOrderNr = errors.New("invalid order number")
 
 var ErrOrderNotFound = errors.New("order not found")
 
+var ErrInsufficientBalance = errors.New("insufficient balance")
+
 const StatusNew = "NEW"
 const StatusProcessing = "PROCESSING"
 const StatusInvalid = "INVALID"
@@ -70,6 +72,33 @@ type Order struct {
 }
 
 type Balance struct {
-	Current   *big.Rat
-	Withdrawn *big.Rat
+	Current          *big.Rat
+	Withdrawn        *big.Rat
+	LatestAccrual    int64
+	LatestWithdrawal int64
+}
+
+func NewBalance() Balance {
+	return Balance{
+		Current:          big.NewRat(0, 100),
+		Withdrawn:        big.NewRat(0, 100),
+		LatestAccrual:    -1,
+		LatestWithdrawal: -1,
+	}
+}
+
+type WithdrawalRequest struct {
+	OrderNr          int64
+	UserID           int64
+	Sum              *big.Rat
+	LatestAccrual    int64
+	LatestWithdrawal int64
+}
+
+type Withdrawal struct {
+	OrderNr     int64
+	UserID      int64
+	Sum         *big.Rat
+	Status      string
+	RequestedAt time.Time
 }

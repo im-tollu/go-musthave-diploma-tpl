@@ -59,6 +59,43 @@ func (s *OrderStorage) GetOrderByNr(nr int64) (srv.Order, error) {
 	return order, nil
 }
 
+func (s *OrderStorage) ListUserWithdrawals(userID int64) ([]srv.Withdrawal, error) {
+	result := make([]srv.Withdrawal, 0)
+
+	rows, err := s.Query(`
+		select WITHDRAWALS_NR, USERS_ID, WITHDRAWALS_SUM, WITHDRAWALS_STATUS, WITHDRAWALS_REQUESTED_AT
+		from WITHDRAWALS
+		where USERS_ID = $1
+		order by WITHDRAWALS_REQUESTED_AT
+	`,
+		userID)
+	if err != nil {
+		return result, fmt.Errorf("cannot select withdrawals for user [%d]: %w", userID, err)
+	}
+	defer func(rows *sql.Rows) {
+		if err := rows.Close(); err != nil {
+			log.Printf("Cannot close result set: %s", err.Error())
+		}
+	}(rows)
+
+	for rows.Next() {
+		w := srv.Withdrawal{}
+		s := Money{}
+		if err := rows.Scan(&w.OrderNr, &w.UserID, &s, &w.Status, &w.RequestedAt); err != nil {
+			return result, fmt.Errorf("cannot map all withdrawals from DB: %w", err)
+		}
+
+		w.Sum = s.Rat
+		result = append(result, w)
+	}
+	if rows.Err() != nil {
+		return result, fmt.Errorf("cannot iterate all results from DB: %w", rows.Err())
+	}
+
+	return result, nil
+
+}
+
 func (s *OrderStorage) ListUserOrders(userID int64) ([]srv.Order, error) {
 	result := make([]srv.Order, 0)
 
@@ -92,6 +129,42 @@ func (s *OrderStorage) ListUserOrders(userID int64) ([]srv.Order, error) {
 	}
 
 	return result, nil
+}
+
+func (s *OrderStorage) Withdraw(wr srv.WithdrawalRequest) error {
+	log.Printf("LatestAccrual: %v\nLatestWithdrawal: %v\n", wr.LatestAccrual, wr.LatestWithdrawal)
+	row := s.QueryRow(`
+			with NEW_WITHDRAWAL as (
+				select
+					$1::bigint as WITHDRAWALS_NR,
+					$2::bigint as USERS_ID,
+					$3::bigint as WITHDRAWALS_SUM,
+					$4::text as WITHDRAWALS_STATUS,
+					coalesce((select ORDERS_NR from ORDERS where USERS_ID = $2 and ORDERS_STATUS = 'PROCESSED' order by ORDERS_UPLOADED_AT desc limit 1), -1) as LATEST_ACCRUAL,
+					coalesce((select WITHDRAWALS_NR from WITHDRAWALS where USERS_ID = $2 and WITHDRAWALS_STATUS = 'PROCESSED' order by WITHDRAWALS_REQUESTED_AT desc limit 1), -1) as LATEST_WITHDRAWAL
+			)
+			insert into WITHDRAWALS
+			select WITHDRAWALS_NR, USERS_ID, WITHDRAWALS_SUM, WITHDRAWALS_STATUS
+			from NEW_WITHDRAWAL
+			where
+					LATEST_ACCRUAL = $5
+			  and LATEST_WITHDRAWAL = $6
+			returning WITHDRAWALS_NR, USERS_ID, WITHDRAWALS_SUM, WITHDRAWALS_STATUS;
+		`, wr.OrderNr, wr.UserID, NewMoney(wr.Sum), srv.StatusNew, wr.LatestAccrual, wr.LatestWithdrawal)
+
+	sum := Money{}
+	w := srv.Withdrawal{}
+	err := row.Scan(&w.OrderNr, &w.UserID, &sum, &w.Status)
+	if errors.Is(err, sql.ErrNoRows) {
+		return fmt.Errorf("withdrowal not accepted because of conflict: %w", err)
+	}
+	if err != nil {
+		return fmt.Errorf("cannot select order: %w", err)
+	}
+
+	w.Sum = sum.Rat
+
+	return nil
 }
 
 func mapOrder(o *srv.Order, row pkg.Scannable) error {

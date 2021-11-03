@@ -5,7 +5,6 @@ import (
 	"fmt"
 	srv "github.com/im-tollu/go-musthave-diploma-tpl/service/order"
 	storage "github.com/im-tollu/go-musthave-diploma-tpl/storage/order"
-	"math/big"
 )
 
 type Service struct {
@@ -51,21 +50,50 @@ func (s *Service) ListUserOrders(userID int64) ([]srv.Order, error) {
 }
 
 func (s *Service) GetUserBalance(userID int64) (srv.Balance, error) {
-	balance := srv.Balance{
-		Current:   big.NewRat(0, 2),
-		Withdrawn: big.NewRat(0, 2),
+	balance := srv.NewBalance()
+
+	accruals, errAccruals := s.storage.ListUserOrders(userID)
+	if errAccruals != nil {
+		return balance, fmt.Errorf("cannot list accruals for user [%d]: %w", userID, errAccruals)
 	}
 
-	orders, err := s.storage.ListUserOrders(userID)
-	if err != nil {
-		return balance, fmt.Errorf("cannot list orders for user [%d]: %w", userID, err)
+	for _, accrual := range accruals {
+		if accrual.Status == srv.StatusProcessed {
+			balance.Current.Add(balance.Current, accrual.Accrual)
+			balance.LatestAccrual = accrual.Nr
+		}
 	}
 
-	for _, order := range orders {
-		if order.Status == srv.StatusProcessed {
-			balance.Current.Add(balance.Current, order.Accrual)
+	withdrawals, errWithdrawals := s.storage.ListUserWithdrawals(userID)
+	if errWithdrawals != nil {
+		return balance, fmt.Errorf("cannot list withdrawals for user [%d]: %w", userID, errAccruals)
+	}
+	for _, withdrawal := range withdrawals {
+		if withdrawal.Status == srv.StatusProcessed {
+			balance.Current.Sub(balance.Current, withdrawal.Sum)
+			balance.LatestAccrual = withdrawal.OrderNr
 		}
 	}
 
 	return balance, nil
+}
+
+func (s *Service) Withdraw(wr srv.WithdrawalRequest) error {
+	bal, errBal := s.GetUserBalance(wr.UserID)
+	if errBal != nil {
+		return fmt.Errorf("cannot get user balance [%v]: %w", wr, errBal)
+	}
+
+	if bal.Current.Cmp(wr.Sum) < 0 {
+		return fmt.Errorf("insufficient balance [%v]: %w", wr, srv.ErrInsufficientBalance)
+	}
+
+	wr.LatestAccrual = bal.LatestAccrual
+	wr.LatestWithdrawal = bal.LatestWithdrawal
+
+	if err := s.storage.Withdraw(wr); err != nil {
+		return fmt.Errorf("cannot withdraw [%v]: %w", wr, err)
+	}
+
+	return nil
 }
