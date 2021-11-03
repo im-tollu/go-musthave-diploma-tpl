@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/im-tollu/go-musthave-diploma-tpl/service/order"
 	"math/big"
+	"strconv"
 	"time"
 )
 
@@ -55,4 +56,19 @@ func NewWithdrawalRequest(j WithdrawalRequestJson, userID int64) (order.Withdraw
 	wr.UserID = userID
 
 	return wr, nil
+}
+
+type WithdrawalView struct {
+	Order       string    `json:"order"`
+	Sum         float64   `json:"sum"`
+	ProcessedAt time.Time `json:"processed_at"`
+}
+
+func NewWithdrawalView(w order.Withdrawal) WithdrawalView {
+	s, _ := w.Sum.Float64()
+	return WithdrawalView{
+		Order:       strconv.FormatInt(w.OrderNr, 10),
+		Sum:         s,
+		ProcessedAt: w.RequestedAt,
+	}
 }

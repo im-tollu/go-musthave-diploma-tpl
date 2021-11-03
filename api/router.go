@@ -24,6 +24,7 @@ func newRouter(h *handler.LoyaltyHandler) *loyaltyRouter {
 			g.Get("/orders", h.GetOrders)
 			g.Get("/balance", h.Balance)
 			g.Post("/balance/withdraw", h.Withdraw)
+			g.Get("/withdrawals", h.GetWithdrawals)
 		})
 	})
 

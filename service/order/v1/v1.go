@@ -97,3 +97,12 @@ func (s *Service) Withdraw(wr srv.WithdrawalRequest) error {
 
 	return nil
 }
+
+func (s *Service) ListUserWithdrawals(userID int64) ([]srv.Withdrawal, error) {
+	withdrawals, err := s.storage.ListUserWithdrawals(userID)
+	if err != nil {
+		return withdrawals, fmt.Errorf("cannot list withdrawals for user [%d]: %w", userID, err)
+	}
+
+	return withdrawals, nil
+}
