@@ -54,7 +54,7 @@ func (s *AccrualStorage) ApplyAccrual(o model.OrderAccrual) error {
 		    ORDERS_STATUS = $2
 		where ORDERS_NR = $3
 			and ORDERS_STATUS in ('NEW', 'PROCESSING')
-	`, o.Accrual*100, o.Status, o.OrderNr)
+	`, o.Accrual, o.Status, o.OrderNr)
 	if errExec != nil {
 		return fmt.Errorf("cannot update order: %w", errExec)
 	}
