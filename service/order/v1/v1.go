@@ -60,7 +60,6 @@ func (s *Service) GetUserBalance(userID int64) (srv.Balance, error) {
 
 	for _, accrual := range accruals {
 		if accrual.Status == srv.StatusProcessed {
-			log.Printf("Accrual %v", accrual)
 			balance.Current += accrual.Accrual
 			balance.LatestAccrual = accrual.Nr
 		}
@@ -71,13 +70,12 @@ func (s *Service) GetUserBalance(userID int64) (srv.Balance, error) {
 		return balance, fmt.Errorf("cannot list withdrawals for user [%d]: %w", userID, errAccruals)
 	}
 	for _, withdrawal := range withdrawals {
-		log.Printf("Withdrawal %v", withdrawal)
 		balance.Current -= withdrawal.Sum
 		balance.Withdrawn += withdrawal.Sum
 		balance.LatestWithdrawal = withdrawal.OrderNr
 	}
 
-	log.Printf("Balance %v", balance)
+	log.Printf("Balance calculated: %v", balance)
 	return balance, nil
 }
 

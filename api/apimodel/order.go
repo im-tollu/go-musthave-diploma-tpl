@@ -53,7 +53,7 @@ func NewWithdrawalRequest(j WithdrawalRequestJSON, userID int64) (order.Withdraw
 	wr.Sum = int64(j.Sum * 100)
 	wr.UserID = userID
 
-	log.Printf("WithdrawalRequest: %v", wr)
+	log.Printf("Parsed WithdrawalRequest: %v", wr)
 	return wr, nil
 }
 

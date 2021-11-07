@@ -34,6 +34,8 @@ func (h *LoyaltyHandler) GetOrders(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 	}
 
+	log.Printf("Listing user orders: %v", view)
+
 	enc := json.NewEncoder(w)
 	enc.SetIndent("", "    ")
 	if err := enc.Encode(view); err != nil {
