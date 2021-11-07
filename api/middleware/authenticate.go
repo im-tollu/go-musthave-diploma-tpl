@@ -22,6 +22,7 @@ func Authenticator(s auth.Service) func(http.Handler) http.Handler {
 			userID := ra.extractUserID(r)
 			if userID == nil {
 				http.Error(w, "Login to access this endpoint", http.StatusUnauthorized)
+				return
 			}
 
 			ctxWithUserID := context.WithValue(r.Context(), AuthContextKeyType{}, *userID)
