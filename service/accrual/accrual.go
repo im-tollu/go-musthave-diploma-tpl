@@ -32,7 +32,7 @@ func NewService(client *client.Client, storage storage.Storage) (*Service, error
 		orderQueue: make(chan int64, 1),
 	}
 
-	srv.run()
+	go srv.run()
 	//ticker := time.NewTicker(tickDuration)
 	//
 	//	for {

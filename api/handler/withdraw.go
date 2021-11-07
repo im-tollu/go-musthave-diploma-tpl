@@ -33,8 +33,8 @@ func (h *LoyaltyHandler) Withdraw(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if errReq != nil {
-		log.Printf("Cannot withdraw: %s", errReq.Error())
-		http.Error(w, "Cannot withdraw", http.StatusInternalServerError)
+		log.Printf("Cannot parse withdrawal request: %s", errReq.Error())
+		http.Error(w, "Cannot parse withdrawal request", http.StatusBadRequest)
 		return
 	}
 
@@ -45,7 +45,7 @@ func (h *LoyaltyHandler) Withdraw(w http.ResponseWriter, r *http.Request) {
 	}
 	if errWithdraw != nil {
 		log.Printf("Cannot withdraw for user [%d]: %s", uID, errWithdraw.Error())
-		http.Error(w, "Cannot get balance for user", http.StatusInternalServerError)
+		http.Error(w, "Cannot withdraw", http.StatusInternalServerError)
 		return
 	}
 

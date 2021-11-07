@@ -3,7 +3,6 @@ package order
 import (
 	"errors"
 	"fmt"
-	"math/big"
 	"strconv"
 	"time"
 )
@@ -67,21 +66,21 @@ type Order struct {
 	UserID     int64
 	Nr         int64
 	Status     string
-	Accrual    *big.Rat
+	Accrual    int64
 	UploadedAt time.Time
 }
 
 type Balance struct {
-	Current          *big.Rat
-	Withdrawn        *big.Rat
+	Current          int64
+	Withdrawn        int64
 	LatestAccrual    int64
 	LatestWithdrawal int64
 }
 
 func NewBalance() Balance {
 	return Balance{
-		Current:          big.NewRat(0, 100),
-		Withdrawn:        big.NewRat(0, 100),
+		Current:          0,
+		Withdrawn:        0,
 		LatestAccrual:    -1,
 		LatestWithdrawal: -1,
 	}
@@ -90,7 +89,7 @@ func NewBalance() Balance {
 type WithdrawalRequest struct {
 	OrderNr          int64
 	UserID           int64
-	Sum              *big.Rat
+	Sum              int64
 	LatestAccrual    int64
 	LatestWithdrawal int64
 }
@@ -98,7 +97,6 @@ type WithdrawalRequest struct {
 type Withdrawal struct {
 	OrderNr     int64
 	UserID      int64
-	Sum         *big.Rat
-	Status      string
+	Sum         int64
 	RequestedAt time.Time
 }

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	srv "github.com/im-tollu/go-musthave-diploma-tpl/service/order"
 	storage "github.com/im-tollu/go-musthave-diploma-tpl/storage/order"
+	"log"
 )
 
 type Service struct {
@@ -59,7 +60,8 @@ func (s *Service) GetUserBalance(userID int64) (srv.Balance, error) {
 
 	for _, accrual := range accruals {
 		if accrual.Status == srv.StatusProcessed {
-			balance.Current.Add(balance.Current, accrual.Accrual)
+			log.Printf("Accrual %v", accrual)
+			balance.Current += accrual.Accrual
 			balance.LatestAccrual = accrual.Nr
 		}
 	}
@@ -69,22 +71,24 @@ func (s *Service) GetUserBalance(userID int64) (srv.Balance, error) {
 		return balance, fmt.Errorf("cannot list withdrawals for user [%d]: %w", userID, errAccruals)
 	}
 	for _, withdrawal := range withdrawals {
-		if withdrawal.Status == srv.StatusProcessed {
-			balance.Current.Sub(balance.Current, withdrawal.Sum)
-			balance.LatestAccrual = withdrawal.OrderNr
-		}
+		log.Printf("Withdrawal %v", withdrawal)
+		balance.Current -= withdrawal.Sum
+		balance.LatestWithdrawal = withdrawal.OrderNr
 	}
 
+	log.Printf("Balance %v", balance)
 	return balance, nil
 }
 
 func (s *Service) Withdraw(wr srv.WithdrawalRequest) error {
 	bal, errBal := s.GetUserBalance(wr.UserID)
+	log.Printf("Balance: %v", bal)
 	if errBal != nil {
 		return fmt.Errorf("cannot get user balance [%v]: %w", wr, errBal)
 	}
 
-	if bal.Current.Cmp(wr.Sum) < 0 {
+	log.Printf("Withdrawal: %v", wr.Sum)
+	if bal.Current < wr.Sum {
 		return fmt.Errorf("insufficient balance [%v]: %w", wr, srv.ErrInsufficientBalance)
 	}
 

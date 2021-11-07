@@ -15,7 +15,7 @@ func NewMoney(sum *big.Rat) Money {
 }
 
 func (m Money) Value() (driver.Value, error) {
-	return m.Num().Int64(), nil
+	return m.Num().Int64() * m.Denom().Int64(), nil
 }
 
 func (m *Money) Scan(value interface{}) error {

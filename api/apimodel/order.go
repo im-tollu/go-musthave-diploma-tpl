@@ -3,7 +3,7 @@ package apimodel
 import (
 	"fmt"
 	"github.com/im-tollu/go-musthave-diploma-tpl/service/order"
-	"math/big"
+	"log"
 	"strconv"
 	"time"
 )
@@ -30,17 +30,15 @@ type BalanceView struct {
 }
 
 func NewBalanceView(b order.Balance) BalanceView {
-	current, _ := b.Current.Float64()
-	withdrawn, _ := b.Withdrawn.Float64()
 	return BalanceView{
-		Current:   current,
-		Withdrawn: withdrawn,
+		Current:   float64(b.Current) / 100,
+		Withdrawn: float64(b.Withdrawn) / 100,
 	}
 }
 
 type WithdrawalRequestJSON struct {
-	OrderNr string `json:"order"`
-	Sum     int64  `json:"sum"`
+	OrderNr string  `json:"order"`
+	Sum     float64 `json:"sum"`
 }
 
 func NewWithdrawalRequest(j WithdrawalRequestJSON, userID int64) (order.WithdrawalRequest, error) {
@@ -52,9 +50,10 @@ func NewWithdrawalRequest(j WithdrawalRequestJSON, userID int64) (order.Withdraw
 	}
 
 	wr.OrderNr = orderNr
-	wr.Sum = big.NewRat(j.Sum*100, 100)
+	wr.Sum = int64(j.Sum * 100)
 	wr.UserID = userID
 
+	log.Printf("WithdrawalRequest: %v", wr)
 	return wr, nil
 }
 
@@ -65,10 +64,9 @@ type WithdrawalView struct {
 }
 
 func NewWithdrawalView(w order.Withdrawal) WithdrawalView {
-	s, _ := w.Sum.Float64()
 	return WithdrawalView{
 		Order:       strconv.FormatInt(w.OrderNr, 10),
-		Sum:         s,
+		Sum:         float64(w.Sum) / 100,
 		ProcessedAt: w.RequestedAt,
 	}
 }
