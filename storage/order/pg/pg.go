@@ -130,6 +130,7 @@ func (s *OrderStorage) ListUserOrders(userID int64) ([]srv.Order, error) {
 }
 
 func (s *OrderStorage) Withdraw(wr srv.WithdrawalRequest) error {
+	log.Printf("Processing withdrawal request: %v", wr)
 	result, errExec := s.Exec(`
 			with NEW_WITHDRAWAL as (
 				select

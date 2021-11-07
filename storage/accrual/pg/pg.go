@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/im-tollu/go-musthave-diploma-tpl/model"
 	storage "github.com/im-tollu/go-musthave-diploma-tpl/storage/accrual"
+	"log"
 )
 
 type AccrualStorage struct {
@@ -48,6 +49,7 @@ func (s *AccrualStorage) NextOrder() (int64, error) {
 }
 
 func (s *AccrualStorage) ApplyAccrual(o model.OrderAccrual) error {
+	log.Printf("Applying order accrual: %v", o)
 	result, errExec := s.Exec(`
 		update ORDERS
 		set ORDERS_ACCRUAL = $1,
