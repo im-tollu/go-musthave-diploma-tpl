@@ -2,7 +2,7 @@ package handler
 
 import (
 	"encoding/json"
-	"github.com/im-tollu/go-musthave-diploma-tpl/api/apiModel"
+	"github.com/im-tollu/go-musthave-diploma-tpl/api/apimodel"
 	"log"
 	"net/http"
 )

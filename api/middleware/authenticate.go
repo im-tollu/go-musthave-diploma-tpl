@@ -3,7 +3,7 @@ package middleware
 import (
 	"context"
 	"fmt"
-	"github.com/im-tollu/go-musthave-diploma-tpl/api/apiModel"
+	"github.com/im-tollu/go-musthave-diploma-tpl/api/apimodel"
 	"github.com/im-tollu/go-musthave-diploma-tpl/service/auth"
 	"log"
 	"net/http"
