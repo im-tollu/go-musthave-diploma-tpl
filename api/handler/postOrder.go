@@ -48,7 +48,7 @@ func (h *LoyaltyHandler) PostOrder(w http.ResponseWriter, r *http.Request) {
 	}
 	if errProcess != nil {
 		msg := fmt.Sprintf("Cannot process order [%v]: %s", o, errProcess.Error())
-		log.Printf(msg)
+		log.Println(msg)
 		http.Error(w, "Cannot process order", http.StatusInternalServerError)
 		return
 	}
