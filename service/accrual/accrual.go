@@ -48,7 +48,7 @@ func (s *Service) run() {
 			tooMayRequests := &model.ErrTooManyRequests{}
 			if errors.Is(res, storage.ErrNoOrders) {
 				log.Println("No orders to process, waiting...")
-				time.AfterFunc(10*time.Second, s.resume)
+				time.AfterFunc(1*time.Second, s.resume)
 			} else if errors.As(res, &tooMayRequests) {
 				log.Println("Too many requests, waiting...")
 				time.AfterFunc(tooMayRequests.RetryAfter, s.resume)
