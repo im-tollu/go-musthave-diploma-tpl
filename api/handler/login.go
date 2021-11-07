@@ -17,7 +17,7 @@ func (h *LoyaltyHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cred := apiModel.CredentialsJSON{}
+	cred := apimodel.CredentialsJSON{}
 
 	dec := json.NewDecoder(r.Body)
 	if errDec := dec.Decode(&cred); errDec != nil {

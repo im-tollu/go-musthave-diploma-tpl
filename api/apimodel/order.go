@@ -1,4 +1,4 @@
-package apiModel
+package apimodel
 
 import (
 	"fmt"
@@ -38,12 +38,12 @@ func NewBalanceView(b order.Balance) BalanceView {
 	}
 }
 
-type WithdrawalRequestJson struct {
+type WithdrawalRequestJSON struct {
 	OrderNr string `json:"order"`
 	Sum     int64  `json:"sum"`
 }
 
-func NewWithdrawalRequest(j WithdrawalRequestJson, userID int64) (order.WithdrawalRequest, error) {
+func NewWithdrawalRequest(j WithdrawalRequestJSON, userID int64) (order.WithdrawalRequest, error) {
 	wr := order.WithdrawalRequest{}
 
 	orderNr, err := order.ParseOrderNr(j.OrderNr)

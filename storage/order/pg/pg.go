@@ -133,7 +133,7 @@ func (s *OrderStorage) ListUserOrders(userID int64) ([]srv.Order, error) {
 
 func (s *OrderStorage) Withdraw(wr srv.WithdrawalRequest) error {
 	log.Printf("LatestAccrual: %v\nLatestWithdrawal: %v\n", wr.LatestAccrual, wr.LatestWithdrawal)
-	row := s.QueryRow(`
+	result, errExec := s.Exec(`
 			with NEW_WITHDRAWAL as (
 				select
 					$1::bigint as WITHDRAWALS_NR,
@@ -152,17 +152,17 @@ func (s *OrderStorage) Withdraw(wr srv.WithdrawalRequest) error {
 			returning WITHDRAWALS_NR, USERS_ID, WITHDRAWALS_SUM, WITHDRAWALS_STATUS;
 		`, wr.OrderNr, wr.UserID, pkg.NewMoney(wr.Sum), srv.StatusNew, wr.LatestAccrual, wr.LatestWithdrawal)
 
-	sum := pkg.Money{}
-	w := srv.Withdrawal{}
-	err := row.Scan(&w.OrderNr, &w.UserID, &sum, &w.Status)
-	if errors.Is(err, sql.ErrNoRows) {
-		return fmt.Errorf("withdrowal not accepted because of conflict: %w", err)
-	}
-	if err != nil {
-		return fmt.Errorf("cannot select order: %w", err)
+	if errExec != nil {
+		return fmt.Errorf("cannot insert withdrawal: %w", errExec)
 	}
 
-	w.Sum = sum.Rat
+	affected, errAffected := result.RowsAffected()
+	if errAffected != nil {
+		return fmt.Errorf("cannot get affected rows: %w", errAffected)
+	}
+	if affected != 1 {
+		return fmt.Errorf("withdrowal not accepted because of conflict")
+	}
 
 	return nil
 }

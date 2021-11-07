@@ -2,7 +2,6 @@ package accrual
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"github.com/im-tollu/go-musthave-diploma-tpl/model"
 	"log"
@@ -37,17 +36,17 @@ func (c *Client) GetOrderAccruals(orderNr int64) (model.OrderAccrual, error) {
 	defer response.Body.Close()
 
 	if contentType := response.Header.Get("Content-Type"); contentType != "application/json" {
-		return model.OrderAccrual{}, errors.New(fmt.Sprintf("unexpected content type [%s]", contentType))
+		return model.OrderAccrual{}, fmt.Errorf("unexpected content type [%s]", contentType)
 	}
 
-	accrualJson := OrderAccrualJson{}
+	accrualJSON := OrderAccrualJSON{}
 
 	dec := json.NewDecoder(response.Body)
-	if err := dec.Decode(&accrualJson); err != nil {
+	if err := dec.Decode(&accrualJSON); err != nil {
 		return model.OrderAccrual{}, fmt.Errorf("cannot parse accrual service response: %w", err)
 	}
 
-	orderAccrual, errConv := accrualJson.ToOrderAccrual()
+	orderAccrual, errConv := accrualJSON.ToOrderAccrual()
 	if errConv != nil {
 		return model.OrderAccrual{}, fmt.Errorf("cannot convert response to Accrual: %w", errConv)
 	}

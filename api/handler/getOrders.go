@@ -22,9 +22,9 @@ func (h *LoyaltyHandler) GetOrders(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	view := make([]apiModel.OrderView, 0, len(orders))
+	view := make([]apimodel.OrderView, 0, len(orders))
 	for _, order := range orders {
-		view = append(view, apiModel.NewOrderView(order))
+		view = append(view, apimodel.NewOrderView(order))
 	}
 
 	w.Header().Set("Content-Type", "application/json")

@@ -20,7 +20,7 @@ func generateKey() ([]byte, error) {
 	return key, nil
 }
 
-func signUserId(key auth.UserSession) auth.SignedUserID {
+func signUserID(key auth.UserSession) auth.SignedUserID {
 	h := hmac.New(sha256.New, key.SignatureKey)
 	h.Write([]byte(strconv.FormatInt(key.UserID, 10)))
 	sum := h.Sum(nil)

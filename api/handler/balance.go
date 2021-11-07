@@ -17,12 +17,12 @@ func (h *LoyaltyHandler) Balance(w http.ResponseWriter, r *http.Request) {
 
 	balance, errBalance := h.OrderSrv.GetUserBalance(uID)
 	if errBalance != nil {
-		log.Printf("Cannot get balance for user [%d]: %e", uID, errBalance.Error())
+		log.Printf("Cannot get balance for user [%d]: %s", uID, errBalance.Error())
 		http.Error(w, "Cannot get balance for user", http.StatusInternalServerError)
 		return
 	}
 
-	view := apiModel.NewBalanceView(balance)
+	view := apimodel.NewBalanceView(balance)
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)

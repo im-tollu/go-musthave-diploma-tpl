@@ -1,4 +1,4 @@
-package apiModel
+package apimodel
 
 import "github.com/im-tollu/go-musthave-diploma-tpl/service/auth"
 

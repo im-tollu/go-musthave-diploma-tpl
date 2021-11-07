@@ -10,7 +10,7 @@ import (
 func makeAuthCookie(u auth.SignedUserID) http.Cookie {
 	v := fmt.Sprintf("%d|%x", u.ID, u.Signature)
 	return http.Cookie{
-		Name:  apiModel.AuthCookieName,
+		Name:  apimodel.AuthCookieName,
 		Value: v,
 	}
 }

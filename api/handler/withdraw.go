@@ -16,7 +16,7 @@ func (h *LoyaltyHandler) Withdraw(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	j := apiModel.WithdrawalRequestJson{}
+	j := apimodel.WithdrawalRequestJSON{}
 
 	dec := json.NewDecoder(r.Body)
 	if err := dec.Decode(&j); err != nil {
@@ -26,7 +26,7 @@ func (h *LoyaltyHandler) Withdraw(w http.ResponseWriter, r *http.Request) {
 	}
 
 	uID := userID(r)
-	wr, errReq := apiModel.NewWithdrawalRequest(j, uID)
+	wr, errReq := apimodel.NewWithdrawalRequest(j, uID)
 	if errors.Is(errReq, order.ErrInvalidOrderNr) {
 		msg := fmt.Sprintf("Invalid order nr: %s", errReq.Error())
 		http.Error(w, msg, http.StatusUnprocessableEntity)

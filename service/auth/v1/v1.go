@@ -68,7 +68,7 @@ func (s *Service) Login(cred auth.Credentials) (auth.SignedUserID, error) {
 		return nilLogin, fmt.Errorf("cannot create session for user [%d]: %w", u.ID, errSet)
 	}
 
-	signedUserID := signUserId(sess)
+	signedUserID := signUserID(sess)
 
 	return signedUserID, nil
 }
@@ -79,9 +79,9 @@ func (s *Service) Validate(sgn auth.SignedUserID) error {
 		return fmt.Errorf("cannot get user session: %w", errGet)
 	}
 
-	canonicalS := signUserId(sess)
+	canonicalS := signUserID(sess)
 	if !hmac.Equal(canonicalS.Signature, sgn.Signature) {
-		return errors.New(fmt.Sprintf("signature %v doesn't match", sgn))
+		return fmt.Errorf("signature %v doesn't match", sgn)
 	}
 
 	return nil

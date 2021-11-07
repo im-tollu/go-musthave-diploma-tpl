@@ -52,7 +52,7 @@ func NewService(client *client.Client, storage storage.Storage) (*Service, error
 	return &j, nil
 }
 
-func (j *Service) pollDb() {
+func (j *Service) pollDB() {
 	for {
 		orderID, errStorage := j.storage.NextOrder()
 		if errors.Is(errStorage, storage.ErrNoOrders) {
@@ -70,7 +70,7 @@ func (j *Service) pollDb() {
 		}
 
 		if errProcess := j.storage.ProcessOrder(accrual); errProcess != nil {
-			log.Printf("cannot process apply accrual to order: %w", errProcess)
+			log.Printf("cannot process apply accrual to order: %s", errProcess.Error())
 			continue
 		}
 	}

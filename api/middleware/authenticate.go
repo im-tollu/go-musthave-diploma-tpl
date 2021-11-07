@@ -39,7 +39,7 @@ type requestAuth struct {
 }
 
 func (a *requestAuth) extractUserID(r *http.Request) *int64 {
-	cookie, errGetCookie := r.Cookie(apiModel.AuthCookieName)
+	cookie, errGetCookie := r.Cookie(apimodel.AuthCookieName)
 	if errGetCookie != nil {
 		log.Printf("Cannot get authentication cookie: %s", errGetCookie.Error())
 		return nil

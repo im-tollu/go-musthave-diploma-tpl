@@ -22,9 +22,9 @@ func (h *LoyaltyHandler) GetWithdrawals(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	view := make([]apiModel.WithdrawalView, 0, len(withdrawals))
+	view := make([]apimodel.WithdrawalView, 0, len(withdrawals))
 	for _, withdrawal := range withdrawals {
-		view = append(view, apiModel.NewWithdrawalView(withdrawal))
+		view = append(view, apimodel.NewWithdrawalView(withdrawal))
 	}
 
 	w.Header().Set("Content-Type", "application/json")
