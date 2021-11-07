@@ -130,7 +130,6 @@ func (s *OrderStorage) ListUserOrders(userID int64) ([]srv.Order, error) {
 }
 
 func (s *OrderStorage) Withdraw(wr srv.WithdrawalRequest) error {
-	log.Printf("LatestAccrual: %v\nLatestWithdrawal: %v\n", wr.LatestAccrual, wr.LatestWithdrawal)
 	result, errExec := s.Exec(`
 			with NEW_WITHDRAWAL as (
 				select

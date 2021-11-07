@@ -82,12 +82,10 @@ func (s *Service) GetUserBalance(userID int64) (srv.Balance, error) {
 
 func (s *Service) Withdraw(wr srv.WithdrawalRequest) error {
 	bal, errBal := s.GetUserBalance(wr.UserID)
-	log.Printf("Balance: %v", bal)
 	if errBal != nil {
 		return fmt.Errorf("cannot get user balance [%v]: %w", wr, errBal)
 	}
 
-	log.Printf("Withdrawal: %v", wr.Sum)
 	if bal.Current < wr.Sum {
 		return fmt.Errorf("insufficient balance [%v]: %w", wr, srv.ErrInsufficientBalance)
 	}
