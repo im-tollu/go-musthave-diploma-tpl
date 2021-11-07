@@ -54,6 +54,7 @@ func (s *Service) run() {
 				time.AfterFunc(tooMayRequests.RetryAfter, s.resume)
 			} else if res != nil {
 				log.Printf("Could not process order: %s", res.Error())
+				s.processOrder()
 			} else {
 				s.processOrder()
 			}
