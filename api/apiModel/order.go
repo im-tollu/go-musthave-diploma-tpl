@@ -9,7 +9,7 @@ import (
 )
 
 type OrderView struct {
-	Number     int64     `json:"number"`
+	Number     string    `json:"number"`
 	Status     string    `json:"status"`
 	Accrual    int       `json:"accrual"`
 	UploadedAt time.Time `json:"uploaded_at"`
@@ -17,7 +17,7 @@ type OrderView struct {
 
 func NewOrderView(o order.Order) OrderView {
 	return OrderView{
-		Number:     o.Nr,
+		Number:     fmt.Sprintf("%d", o.Nr),
 		Status:     o.Status,
 		Accrual:    0,
 		UploadedAt: time.Time{},
