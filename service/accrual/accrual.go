@@ -26,12 +26,13 @@ func NewService(client *client.Client, storage storage.Storage) (*Service, error
 		return nil, errors.New("storage required")
 	}
 
-	j := Service{
+	srv := Service{
 		client:     client,
 		storage:    storage,
 		orderQueue: make(chan int64, 1),
 	}
 
+	srv.run()
 	//ticker := time.NewTicker(tickDuration)
 	//
 	//	for {
@@ -49,10 +50,10 @@ func NewService(client *client.Client, storage storage.Storage) (*Service, error
 	//	}
 	//
 
-	return &j, nil
+	return &srv, nil
 }
 
-func (j *Service) pollDB() {
+func (j *Service) run() {
 	for {
 		orderID, errStorage := j.storage.NextOrder()
 		if errors.Is(errStorage, storage.ErrNoOrders) {
@@ -63,14 +64,16 @@ func (j *Service) pollDB() {
 			continue
 		}
 
+		log.Printf("Processing order [%d]", orderID)
 		accrual, errClient := j.client.GetOrderAccruals(orderID)
 		if errClient != nil {
 			log.Printf("cannot get order for accrual because of service: %s", errClient.Error())
 			continue
 		}
+		log.Printf("Got accrual: %v", accrual)
 
-		if errProcess := j.storage.ProcessOrder(accrual); errProcess != nil {
-			log.Printf("cannot process apply accrual to order: %s", errProcess.Error())
+		if errApply := j.storage.ApplyAccrual(accrual); errApply != nil {
+			log.Printf("cannot process apply accrual to order: %s", errApply.Error())
 			continue
 		}
 	}

@@ -35,6 +35,9 @@ func (c *Client) GetOrderAccruals(orderNr int64) (model.OrderAccrual, error) {
 	}
 	defer response.Body.Close()
 
+	if response.StatusCode != http.StatusOK {
+		return model.OrderAccrual{}, fmt.Errorf("unexpected status: %s", response.Status)
+	}
 	if contentType := response.Header.Get("Content-Type"); contentType != "application/json" {
 		return model.OrderAccrual{}, fmt.Errorf("unexpected content type [%s]", contentType)
 	}

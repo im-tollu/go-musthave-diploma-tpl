@@ -1,2 +1,2 @@
 alter table ORDERS
-    add column ACCRUAL integer not null default 0;
+    add column ORDERS_ACCRUAL integer not null default 0;

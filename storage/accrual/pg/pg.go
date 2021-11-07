@@ -21,11 +21,17 @@ func NewAccrualStorage(db *sql.DB) (*AccrualStorage, error) {
 
 func (s *AccrualStorage) NextOrder() (int64, error) {
 	row := s.QueryRow(`
-		select ORDERS_NR
-		from ORDERS
-		where ORDERS_STATUS in ('NEW', 'PROCESSING')
-		order by ORDERS_UPLOADED_AT
-		limit 1
+		with NEXT_ORDERS as (
+		    select ORDERS_NR
+			from ORDERS
+			where ORDERS_STATUS in ('NEW', 'PROCESSING')
+				and ORDERS_PROCESSED_AT + interval '60 seconds' < current_timestamp
+			order by ORDERS_PROCESSED_AT
+		)
+		update ORDERS
+			set ORDERS_PROCESSED_AT = current_timestamp
+			where ORDERS_NR = (select ORDERS_NR from NEXT_ORDERS limit 1)
+			returning ORDERS_NR
 	`)
 
 	var orderID int64
@@ -41,13 +47,14 @@ func (s *AccrualStorage) NextOrder() (int64, error) {
 	return orderID, nil
 }
 
-func (s *AccrualStorage) ProcessOrder(o model.OrderAccrual) error {
+func (s *AccrualStorage) ApplyAccrual(o model.OrderAccrual) error {
 	result, errExec := s.Exec(`
 		update ORDERS
-		set ACCRUAL = $1
-		where ORDERS_NR = $2
-			and ORDERS_STATUS = $3
-	`, o.Accrual*100)
+		set ORDERS_ACCRUAL = $1,
+		    ORDERS_STATUS = $2
+		where ORDERS_NR = $3
+			and ORDERS_STATUS in ('NEW', 'PROCESSING')
+	`, o.Accrual*100, o.Status, o.OrderNr)
 	if errExec != nil {
 		return fmt.Errorf("cannot update order: %w", errExec)
 	}

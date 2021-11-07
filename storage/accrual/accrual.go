@@ -9,5 +9,5 @@ var ErrNoOrders = errors.New("no more orders to process")
 
 type Storage interface {
 	NextOrder() (int64, error)
-	ProcessOrder(o model.OrderAccrual) error
+	ApplyAccrual(o model.OrderAccrual) error
 }
