@@ -80,7 +80,7 @@ func (s *OrderStorage) ListUserWithdrawals(userID int64) ([]srv.Withdrawal, erro
 
 	for rows.Next() {
 		w := srv.Withdrawal{}
-		s := Money{}
+		s := pkg.Money{}
 		if err := rows.Scan(&w.OrderNr, &w.UserID, &s, &w.Status, &w.RequestedAt); err != nil {
 			return result, fmt.Errorf("cannot map all withdrawals from DB: %w", err)
 		}
@@ -150,9 +150,9 @@ func (s *OrderStorage) Withdraw(wr srv.WithdrawalRequest) error {
 					LATEST_ACCRUAL = $5
 			  and LATEST_WITHDRAWAL = $6
 			returning WITHDRAWALS_NR, USERS_ID, WITHDRAWALS_SUM, WITHDRAWALS_STATUS;
-		`, wr.OrderNr, wr.UserID, NewMoney(wr.Sum), srv.StatusNew, wr.LatestAccrual, wr.LatestWithdrawal)
+		`, wr.OrderNr, wr.UserID, pkg.NewMoney(wr.Sum), srv.StatusNew, wr.LatestAccrual, wr.LatestWithdrawal)
 
-	sum := Money{}
+	sum := pkg.Money{}
 	w := srv.Withdrawal{}
 	err := row.Scan(&w.OrderNr, &w.UserID, &sum, &w.Status)
 	if errors.Is(err, sql.ErrNoRows) {

@@ -1,4 +1,4 @@
-package pg
+package pkg
 
 import (
 	"database/sql/driver"

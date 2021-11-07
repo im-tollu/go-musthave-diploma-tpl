@@ -9,6 +9,7 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/im-tollu/go-musthave-diploma-tpl/api"
 	"github.com/im-tollu/go-musthave-diploma-tpl/config"
+	accrual "github.com/im-tollu/go-musthave-diploma-tpl/storage/accrual/pg"
 	auth "github.com/im-tollu/go-musthave-diploma-tpl/storage/auth/pg"
 	order "github.com/im-tollu/go-musthave-diploma-tpl/storage/order/pg"
 	_ "github.com/jackc/pgx/v4/stdlib"
@@ -46,7 +47,18 @@ func main() {
 		log.Fatalf("Cannot instantiate order storage: %s", errOrderStorage.Error())
 	}
 
-	server, errServer := api.NewServer(conf.RunAddress, authStorage, orderStorage)
+	accrualStorage, errAccrualStorage := accrual.NewAccrualStorage(db)
+	if errAccrualStorage != nil {
+		log.Fatalf("Cannot instantiate accrual storage: %s", errAccrualStorage.Error())
+	}
+
+	server, errServer := api.NewServer(
+		conf.RunAddress,
+		conf.AccrualSystemAddress,
+		authStorage,
+		orderStorage,
+		accrualStorage,
+	)
 	if errServer != nil {
 		log.Fatalf("Cannot start HTTP server: %s", errServer.Error())
 	}

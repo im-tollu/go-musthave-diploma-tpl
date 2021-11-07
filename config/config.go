@@ -13,13 +13,12 @@ import (
 	"flag"
 	"fmt"
 	"github.com/caarlos0/env/v6"
-	"net/url"
 )
 
 type Config struct {
-	RunAddress           string  `env:"RUN_ADDRESS" envDefault:"localhost:8080"`
-	DatabaseURI          string  `env:"DATABASE_URI" envDefault:"postgres://postgres:postgres@localhost:5432/praktikum?sslmode=disable"`
-	AccrualSystemAddress url.URL `env:"ACCRUAL_SYSTEM_ADDRESS" envDefault:"http://localhost:8080"`
+	RunAddress           string `env:"RUN_ADDRESS" envDefault:"localhost:8080"`
+	DatabaseURI          string `env:"DATABASE_URI" envDefault:"postgres://postgres:postgres@localhost:5432/praktikum?sslmode=disable"`
+	AccrualSystemAddress string `env:"ACCRUAL_SYSTEM_ADDRESS" envDefault:"http://localhost:8080"`
 }
 
 func Load() (*Config, error) {
@@ -37,19 +36,7 @@ func Load() (*Config, error) {
 func overrideWithCliParams(config *Config) {
 	flag.StringVar(&config.RunAddress, "a", config.RunAddress, "адрес и порт запуска сервиса: переменная окружения ОС RUN_ADDRESS или флаг -a")
 	flag.StringVar(&config.DatabaseURI, "d", config.DatabaseURI, "адрес подключения к базе данных: переменная окружения ОС DATABASE_URI или флаг -d")
-	flag.Func("r", "адрес системы расчёта начислений: переменная окружения ОС ACCRUAL_SYSTEM_ADDRESS или флаг -r", func(flagValue string) error {
-		if flagValue == "" {
-			return nil
-		}
-
-		accrualSystemAddr, errParse := url.Parse(flagValue)
-		if errParse != nil {
-			return fmt.Errorf("cannot parse [%s] as URL: %w", flagValue, errParse)
-		}
-		config.AccrualSystemAddress = *accrualSystemAddr
-
-		return nil
-	})
+	flag.StringVar(&config.AccrualSystemAddress, "r", config.AccrualSystemAddress, "адрес системы расчёта начислений: переменная окружения ОС ACCRUAL_SYSTEM_ADDRESS или флаг -r")
 
 	flag.Parse()
 }
