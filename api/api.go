@@ -78,6 +78,8 @@ func (s *LoyaltyServer) Shutdown(ctx context.Context) error {
 		return err
 	}
 
+	s.accrualSrv.Stop()
+
 	log.Println("Server stopped.")
 
 	return nil

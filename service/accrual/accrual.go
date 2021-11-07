@@ -2,6 +2,7 @@ package accrual
 
 import (
 	"errors"
+	"fmt"
 	client "github.com/im-tollu/go-musthave-diploma-tpl/client/accrual"
 	"github.com/im-tollu/go-musthave-diploma-tpl/model"
 	storage "github.com/im-tollu/go-musthave-diploma-tpl/storage/accrual"
@@ -16,10 +17,10 @@ type Client interface {
 type Service struct {
 	client     *client.Client
 	storage    storage.Storage
-	orderQueue chan int64
+	resultChan chan error
+	resumeChan chan struct{}
+	stopChan   chan struct{}
 }
-
-const tickDuration = 12 * time.Second
 
 func NewService(client *client.Client, storage storage.Storage) (*Service, error) {
 	if storage == nil {
@@ -29,56 +30,72 @@ func NewService(client *client.Client, storage storage.Storage) (*Service, error
 	srv := Service{
 		client:     client,
 		storage:    storage,
-		orderQueue: make(chan int64, 1),
+		resultChan: make(chan error, 1),
+		resumeChan: make(chan struct{}, 1),
+		stopChan:   make(chan struct{}, 1),
 	}
 
 	go srv.run()
-	//ticker := time.NewTicker(tickDuration)
-	//
-	//	for {
-	//		select {
-	//		case <-ticker.C:
-	//			j.Run()
-	//		case dur := <-j.pause:
-	//			ticker.Stop()
-	//			time.AfterFunc(dur, func() {
-	//				resume <- struct{}{}
-	//			})
-	//		case <-resume:
-	//			ticker.Reset(tickDuration)
-	//		}
-	//	}
-	//
 
 	return &srv, nil
 }
 
-func (j *Service) run() {
+func (s *Service) run() {
+	s.processOrder()
 	for {
-		orderID, errStorage := j.storage.NextOrder()
-		if errors.Is(errStorage, storage.ErrNoOrders) {
-			continue
-		}
-		if errStorage != nil {
-			log.Printf("cannot get order for accrual because of DB: %s", errStorage.Error())
-			continue
-		}
-
-		log.Printf("Processing order [%d]", orderID)
-		accrual, errClient := j.client.GetOrderAccruals(orderID)
-		if errClient != nil {
-			log.Printf("cannot get order for accrual because of service: %s", errClient.Error())
-			continue
-		}
-		log.Printf("Got accrual: %v", accrual)
-
-		if errApply := j.storage.ApplyAccrual(accrual); errApply != nil {
-			log.Printf("cannot process apply accrual to order: %s", errApply.Error())
-			continue
+		select {
+		case res := <-s.resultChan:
+			tooMayRequests := &model.ErrTooManyRequests{}
+			if errors.Is(res, storage.ErrNoOrders) {
+				log.Println("No orders to process, waiting...")
+				time.AfterFunc(10*time.Second, s.resume)
+			} else if errors.As(res, &tooMayRequests) {
+				log.Println("Too many requests, waiting...")
+				time.AfterFunc(tooMayRequests.RetryAfter, s.resume)
+			} else if res != nil {
+				log.Printf("Could not process order: %s", res.Error())
+			} else {
+				s.processOrder()
+			}
+		case <-s.resumeChan:
+			s.processOrder()
+		case <-s.stopChan:
+			log.Println("Stopping Accruals service...")
+			close(s.stopChan)
+			return
 		}
 	}
 }
 
-func (j *Service) Close() error {
-	return nil
+func (s *Service) resume() {
+	s.resumeChan <- struct{}{}
+}
+
+func (s *Service) processOrder() {
+	orderID, errStorage := s.storage.NextOrder()
+	if errStorage != nil {
+		err := fmt.Errorf("cannot get order for accrual because of DB: %w", errStorage)
+		s.resultChan <- err
+		return
+	}
+
+	log.Printf("Processing order [%d]", orderID)
+	accrual, errClient := s.client.GetOrderAccruals(orderID)
+	if errClient != nil {
+		err := fmt.Errorf("cannot get order for accrual because of service: %w", errClient)
+		s.resultChan <- err
+		return
+	}
+	log.Printf("Got accrual: %v", accrual)
+
+	if errApply := s.storage.ApplyAccrual(accrual); errApply != nil {
+		err := fmt.Errorf("cannot process apply accrual to order: %w", errApply)
+		s.resultChan <- err
+		return
+	}
+}
+
+func (s *Service) Stop() {
+	s.stopChan <- struct{}{}
+	<-s.stopChan
 }

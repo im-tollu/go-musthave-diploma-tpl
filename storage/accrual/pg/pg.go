@@ -25,7 +25,7 @@ func (s *AccrualStorage) NextOrder() (int64, error) {
 		    select ORDERS_NR
 			from ORDERS
 			where ORDERS_STATUS in ('NEW', 'PROCESSING')
-				and ORDERS_PROCESSED_AT + interval '60 seconds' < current_timestamp
+				and ORDERS_PROCESSED_AT + interval '5 seconds' < current_timestamp
 			order by ORDERS_PROCESSED_AT
 		)
 		update ORDERS
