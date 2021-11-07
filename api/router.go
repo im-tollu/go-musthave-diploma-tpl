@@ -2,6 +2,7 @@ package api
 
 import (
 	"github.com/go-chi/chi/v5"
+	chimiddleware "github.com/go-chi/chi/v5/middleware"
 	"github.com/im-tollu/go-musthave-diploma-tpl/api/handler"
 	"github.com/im-tollu/go-musthave-diploma-tpl/api/middleware"
 )
@@ -19,6 +20,7 @@ func newRouter(h *handler.LoyaltyHandler) *loyaltyRouter {
 		r.Post("/register", h.Register)
 		r.Post("/login", h.Login)
 		r.Group(func(g chi.Router) {
+			g.Use(chimiddleware.Logger)
 			g.Use(middleware.Authenticator(h.AuthSrv))
 			g.Post("/orders", h.PostOrder)
 			g.Get("/orders", h.GetOrders)

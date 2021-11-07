@@ -30,7 +30,9 @@ func (s *AccrualStorage) NextOrder() (int64, error) {
 			order by ORDERS_PROCESSED_AT
 		)
 		update ORDERS
-			set ORDERS_PROCESSED_AT = current_timestamp
+			set 
+			    ORDERS_PROCESSED_AT = current_timestamp,
+				ORDERS_STATUS = 'PROCESSING'
 			where ORDERS_NR = (select ORDERS_NR from NEXT_ORDERS limit 1)
 			returning ORDERS_NR
 	`)
@@ -55,7 +57,7 @@ func (s *AccrualStorage) ApplyAccrual(o model.OrderAccrual) error {
 		set ORDERS_ACCRUAL = $1,
 		    ORDERS_STATUS = $2
 		where ORDERS_NR = $3
-			and ORDERS_STATUS in ('NEW', 'PROCESSING')
+			and ORDERS_STATUS = 'PROCESSING'
 	`, o.Accrual, o.Status, o.OrderNr)
 	if errExec != nil {
 		return fmt.Errorf("cannot update order: %w", errExec)
