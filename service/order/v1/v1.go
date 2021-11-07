@@ -73,6 +73,7 @@ func (s *Service) GetUserBalance(userID int64) (srv.Balance, error) {
 	for _, withdrawal := range withdrawals {
 		log.Printf("Withdrawal %v", withdrawal)
 		balance.Current -= withdrawal.Sum
+		balance.Withdrawn += withdrawal.Sum
 		balance.LatestWithdrawal = withdrawal.OrderNr
 	}
 
